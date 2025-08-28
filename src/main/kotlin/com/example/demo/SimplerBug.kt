@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono
 import kotlin.system.exitProcess
 
 suspend fun main(args: Array<String>) {
-    Thread.setDefaultUncaughtExceptionHandler(MainThreadExceptionHandler(Thread.currentThread()))
+    Thread.setDefaultUncaughtExceptionHandler(MainThreadExceptionHandler())
 
     val mockWebServer = MockWebServer()
     mockWebServer.start()

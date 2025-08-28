@@ -20,7 +20,7 @@ import org.springframework.web.reactive.function.client.bodyToMono
 class DemoApplication
 
 fun main(args: Array<String>) {
-    Thread.setDefaultUncaughtExceptionHandler(MainThreadExceptionHandler(Thread.currentThread()))
+    Thread.setDefaultUncaughtExceptionHandler(MainThreadExceptionHandler())
 
     runApplication<DemoApplication>(*args)
 }
