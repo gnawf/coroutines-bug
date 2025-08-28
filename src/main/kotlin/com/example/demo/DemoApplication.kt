@@ -65,17 +65,12 @@ class Test {
         mockWebServer.enqueue(MockResponse(code = 400))
 
         launch {
-            try {
-                WebClient.builder().build()
-                    .get()
-                    .uri(mockWebServer.url("").toUri())
-                    .retrieve()
-                    .bodyToMono<String>()
-                    .awaitSingle()
-            } catch (e: Exception) {
-                Exception("wtf", e).printStackTrace()
-                throw e
-            }
+            WebClient.builder().build()
+                .get()
+                .uri(mockWebServer.url("").toUri())
+                .retrieve()
+                .bodyToMono<String>()
+                .awaitSingle()
         }
     }
 }
