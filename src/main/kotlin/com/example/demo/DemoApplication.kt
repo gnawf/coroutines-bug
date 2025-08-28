@@ -44,7 +44,7 @@ class Test {
             launchBadCode()
         }
 
-        return "Ok"
+        return "Done"
     }
 
     /**
@@ -58,7 +58,7 @@ class Test {
             launchBadCode()
         }
 
-        return "Ok"
+        return "Done"
     }
 
     suspend fun CoroutineScope.launchBadCode() {
