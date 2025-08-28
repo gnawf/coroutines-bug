@@ -1,5 +1,6 @@
 package com.example.demo
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingle
@@ -24,21 +25,6 @@ fun main(args: Array<String>) {
     runApplication<DemoApplication>(*args)
 }
 
-/**
- * Replicates what was in Statsig SDK prior to 2.0.8
- *
- * [Github Release](https://github.com/statsig-io/java-server-sdk/compare/2.0.7...2.0.8)
- */
-class MainThreadExceptionHandler(val currentThread: Thread) : Thread.UncaughtExceptionHandler {
-    override fun uncaughtException(t: Thread, e: Throwable) {
-        if (!t.name.equals(currentThread.name)) {
-            throw e
-        }
-        println("Shutting down Statsig")
-        throw e
-    }
-}
-
 @RestController
 class Test {
     private val mockWebServer = MockWebServer()
@@ -47,26 +33,49 @@ class Test {
         mockWebServer.start()
     }
 
-    @GetMapping
-    suspend fun test(): String {
-        mockWebServer.enqueue(MockResponse(code = 400))
-
+    /**
+     * This request never finishes and hangs
+     *
+     * Throws a [kotlinx.coroutines.CoroutinesInternalError]
+     */
+    @GetMapping("supervisor-scope")
+    suspend fun supervisorScope(): String {
         supervisorScope {
-            launch {
-                try {
-                    WebClient.builder().build()
-                        .get()
-                        .uri(mockWebServer.url("").toUri())
-                        .retrieve()
-                        .bodyToMono<String>()
-                        .awaitSingle()
-                } catch (e: Exception) {
-                    Exception("wtf", e).printStackTrace()
-                    throw e
-                }
-            }
+            launchBadCode()
         }
 
         return "Ok"
+    }
+
+    /**
+     * This request finishes with a 500 Internal Server Error.
+     *
+     * Does NOT throw a [kotlinx.coroutines.CoroutinesInternalError]
+     */
+    @GetMapping("coroutine-scope")
+    suspend fun coroutineScope(): String {
+        coroutineScope {
+            launchBadCode()
+        }
+
+        return "Ok"
+    }
+
+    suspend fun CoroutineScope.launchBadCode() {
+        mockWebServer.enqueue(MockResponse(code = 400))
+
+        launch {
+            try {
+                WebClient.builder().build()
+                    .get()
+                    .uri(mockWebServer.url("").toUri())
+                    .retrieve()
+                    .bodyToMono<String>()
+                    .awaitSingle()
+            } catch (e: Exception) {
+                Exception("wtf", e).printStackTrace()
+                throw e
+            }
+        }
     }
 }
